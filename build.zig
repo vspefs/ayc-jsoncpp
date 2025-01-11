@@ -12,8 +12,6 @@ pub fn build(b: *std.Build) !void {
 
     const dep = b.dependency("src", .{});
     const secure_memory = b.option(bool, "secure", "If on, the library zeroes any memory that it has allocated before it frees its memory. (default: false)") orelse false;
-    const build_static = b.option(bool, "static", "build static library (default: true)") orelse true;
-    const build_shared = b.option(bool, "shared", "build shared library (default: false)") orelse false;
 
     var defines = std.ArrayList([]const u8).init(alloc);
     var cargs = std.ArrayList([]const u8).init(alloc);
@@ -54,16 +52,7 @@ pub fn build(b: *std.Build) !void {
         try defines.append("-DJSONCPP_USE_SECURE_MEMORY=1");
     }
 
-    const version = b.addConfigHeader(
-        .{
-            .style = .{ .cmake = dep.path("version.in") },
-            .include_path = "version",
-        },
-        .{ .JSONCPP_VERSION = "1.9.7" },
-    );
-    _ = version;
-
-    const mod = b.addModule("sources", .{
+    const mod = b.addModule("source", .{
         .optimize = optimize,
         .target = target,
         .link_libcpp = true,
@@ -80,23 +69,42 @@ pub fn build(b: *std.Build) !void {
         .root = dep.path("src/lib_json"),
     });
 
-    if (build_static) {
-        const static = b.addStaticLibrary(.{
-            .name = "jsoncpp",
-            .root_module = mod,
-        });
-        static.installHeadersDirectory(dep.path("include"), "", .{});
-        b.getInstallStep().dependOn(&b.addInstallArtifact(static, .{}).step);
-    }
+    const mod_shared = b.addModule("source-shared", .{
+        .optimize = optimize,
+        .target = target,
+        .link_libcpp = true,
+    });
+    mod_shared.addIncludePath(dep.path("include"));
+    mod_shared.addIncludePath(dep.path("src/lib_json"));
+    mod_shared.addCSourceFiles(.{
+        .files = &.{
+            "json_reader.cpp",
+            "json_value.cpp",
+            "json_writer.cpp",
+        },
+        .flags = try std.mem.concat(alloc, []const u8, &.{
+            cargs.items,
+            defines.items,
+            &.{if (target.result.os.tag == .windows) "-DJSON_DLL_BUILD" else "-UJSON_DLL_BUILD"},
+        }),
+        .root = dep.path("src/lib_json"),
+    });
 
-    if (build_shared) {
-        const shared = b.addSharedLibrary(.{
-            .name = "jsoncpp",
-            .root_module = mod,
-        });
-        shared.installHeadersDirectory(dep.path("include"), "", .{});
-        b.getInstallStep().dependOn(&b.addInstallArtifact(shared, .{}).step);
-    }
+    b.addNamedLazyPath("include", dep.path("include"));
+
+    const static = b.addStaticLibrary(.{
+        .name = "static",
+        .root_module = mod,
+    });
+    static.installHeadersDirectory(dep.path("include"), "", .{});
+    b.installArtifact(static);
+
+    const shared = b.addSharedLibrary(.{
+        .name = "shared",
+        .root_module = mod_shared,
+    });
+    shared.installHeadersDirectory(dep.path("include"), "", .{});
+    b.installArtifact(shared);
 }
 
 const std = @import("std");
