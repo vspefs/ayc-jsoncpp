@@ -32,12 +32,17 @@ pub fn build(b: *std.Build) !void {
         blk: {
             const detector = b.dependency("detector", .{}).builder.build_root.handle;
             var detecting = std.process.Child.init(&.{ b.graph.zig_exe, "build", "run" }, alloc);
-            detecting.cwd_dir = detector;
+            detecting.cwd = try detector.realpathAlloc(alloc, ".");
             detecting.stdout_behavior = .Pipe;
+            detecting.stderr_behavior = .Pipe;
+            var stdout = std.ArrayList(u8).init(alloc);
+            var stderr = std.ArrayList(u8).init(alloc);
+            defer stderr.deinit();
             _ = try detecting.spawn();
-            const ret = try detecting.stdout.?.readToEndAlloc(alloc, 1024);
+            try detecting.collectOutput(&stdout, &stderr, 1024);
             _ = try detecting.wait();
-            break :blk ret;
+
+            break :blk try stdout.toOwnedSlice();
         },
         .{},
     );
