@@ -1,0 +1,21 @@
+.{
+    .name = "ayc-jsoncpp",
+    .version = "1.9.7",
+
+    .dependencies = .{
+        .src = .{
+            .url = "git+https://github.com/open-source-parsers/jsoncpp#dca8a24cf8da1fc61b5cf0422cad03474124196c",
+            .hash = "1220c8d0913d170f310cd394b375525bd5570f16da0aa0e485af7642bea573e50ab6",
+        },
+        .detector = .{
+            .path = "detector",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "detector",
+        "LICENSE",
+    },
+}
