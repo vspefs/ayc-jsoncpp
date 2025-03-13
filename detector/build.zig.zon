@@ -1,6 +1,7 @@
 .{
-    .name = "ayc-jsoncpp-detector",
+    .name = .ayc_jsoncpp_detector,
     .version = "0.0.0",
+    .fingerprint = 0x66bbed828454728,
 
     .dependencies = .{},
 

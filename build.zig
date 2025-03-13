@@ -35,14 +35,14 @@ pub fn build(b: *std.Build) !void {
             detecting.cwd = try detector.realpathAlloc(alloc, ".");
             detecting.stdout_behavior = .Pipe;
             detecting.stderr_behavior = .Pipe;
-            var stdout = std.ArrayList(u8).init(alloc);
-            var stderr = std.ArrayList(u8).init(alloc);
-            defer stderr.deinit();
+            var stdout: std.ArrayListAlignedUnmanaged(u8, null) = .{};
+            var stderr: std.ArrayListAlignedUnmanaged(u8, null) = .{};
+            defer stderr.deinit(alloc);
             _ = try detecting.spawn();
-            try detecting.collectOutput(&stdout, &stderr, 1024);
+            try detecting.collectOutput(alloc, &stdout, &stderr, 1024);
             _ = try detecting.wait();
 
-            break :blk try stdout.toOwnedSlice();
+            break :blk try stdout.toOwnedSlice(alloc);
         },
         .{},
     );

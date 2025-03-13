@@ -1,11 +1,12 @@
 .{
-    .name = "ayc-jsoncpp",
+    .name = .ayc_jsoncpp,
     .version = "1.9.7",
+    .fingerprint = 0x4e297b9662df8981,
 
     .dependencies = .{
         .src = .{
-            .url = "git+https://github.com/open-source-parsers/jsoncpp#dca8a24cf8da1fc61b5cf0422cad03474124196c",
-            .hash = "1220c8d0913d170f310cd394b375525bd5570f16da0aa0e485af7642bea573e50ab6",
+            .url = "git+https://github.com/open-source-parsers/jsoncpp#037752d9a1e48c8b7e5a62ee895a352166df03e3",
+            .hash = "N-V-__8AAFXMQADkeXMtANtA2OyZ589pcWu4w9owznM8GVh4",
         },
         .detector = .{
             .path = "detector",
